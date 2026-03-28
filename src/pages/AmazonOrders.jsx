@@ -13,25 +13,25 @@ import { extractError, formatDate } from '../lib/utils';
 // ── Constants ─────────────────────────────────────────────────
 
 const TABS = [
-    { key: 'active',    label: 'Active Orders',  orderStatuses: ['Unshipped', 'PartiallyShipped', 'Pending'] },
-    { key: 'shipped',   label: 'Shipped',         orderStatuses: ['Shipped', 'InvoiceUnconfirmed'] },
-    { key: 'cancelled', label: 'Cancelled',       orderStatuses: ['Canceled'] },
+    { key: 'active', label: 'Active Orders', orderStatuses: ['Unshipped', 'PartiallyShipped', 'Pending'] },
+    { key: 'shipped', label: 'Shipped', orderStatuses: ['Shipped', 'InvoiceUnconfirmed'] },
+    { key: 'cancelled', label: 'Cancelled', orderStatuses: ['Canceled'] },
 ];
 
 const STATUS_COLORS = {
-    Pending:              'text-slate-600 bg-slate-50 border-slate-200',
-    PendingAvailability:  'text-slate-600 bg-slate-50 border-slate-200',
-    Unshipped:            'text-blue-700 bg-blue-50 border-blue-200',
-    PartiallyShipped:     'text-amber-700 bg-amber-50 border-amber-200',
-    Shipped:              'text-emerald-700 bg-emerald-50 border-emerald-200',
-    InvoiceUnconfirmed:   'text-indigo-700 bg-indigo-50 border-indigo-200',
-    Canceled:             'text-red-600 bg-red-50 border-red-200',
-    Unfulfillable:        'text-red-700 bg-red-100 border-red-300',
+    Pending: 'text-slate-600 bg-slate-50 border-slate-200',
+    PendingAvailability: 'text-slate-600 bg-slate-50 border-slate-200',
+    Unshipped: 'text-blue-700 bg-blue-50 border-blue-200',
+    PartiallyShipped: 'text-amber-700 bg-amber-50 border-amber-200',
+    Shipped: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+    InvoiceUnconfirmed: 'text-indigo-700 bg-indigo-50 border-indigo-200',
+    Canceled: 'text-red-600 bg-red-50 border-red-200',
+    Unfulfillable: 'text-red-700 bg-red-100 border-red-300',
 };
 
 const FULFILLMENT_LABELS = {
     MFN: 'Self Ship',
-    AFN: 'Fulfilled by Amazon',
+    AFN: 'Fulfilled by Amazon', D
 };
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -114,58 +114,56 @@ export function AmazonOrdersPage() {
     const { data, isFetching, error, refetch } = useQuery({
         queryKey: ['amazon-orders', accountId, activeTab],
         queryFn: () => accountsApi.getOrders(sellerId, accountId, {
-            tab:          activeTab,
+            tab: activeTab,
             orderStatuses: tabConfig.orderStatuses,
         }),
-        select:    (res) => res.data.data,
+        select: (res) => res.data.data,
         staleTime: 60 * 1000,
     });
 
-    const orders  = data?.orders  ?? [];
+    const orders = data?.orders ?? [];
     const hasMore = data?.hasMore ?? false;
 
     return (
         <div className="space-y-6">
             {/* Header */}
             <motion.div
-                className="flex items-center gap-4"
+                className="flex items-center gap-3"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
             >
                 <button
                     onClick={() => navigate(-1)}
-                    className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-white border border-transparent hover:border-slate-200 transition-all"
+                    className="p-1.5 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
                 >
-                    <ArrowLeft size={18} />
+                    <ArrowLeft size={16} />
                 </button>
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center border bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200">
-                    <ShoppingCart size={22} className="text-orange-600" />
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                    <ShoppingCart size={16} className="text-slate-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h1 className="text-xl font-bold text-slate-900">Amazon Orders</h1>
-                    <p className="text-sm text-slate-400 truncate">Account: {accountId}</p>
+                    <h1 className="text-[20px] font-medium text-slate-900">Amazon Orders</h1>
                 </div>
                 <button
                     onClick={() => refetch()}
                     disabled={isFetching}
-                    className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-white border border-transparent hover:border-slate-200 transition-all disabled:opacity-50"
+                    className="p-1.5 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors disabled:opacity-50"
                     title="Refresh"
                 >
-                    <RefreshCw size={16} className={isFetching ? 'animate-spin' : ''} />
+                    <RefreshCw size={15} className={isFetching ? 'animate-spin' : ''} />
                 </button>
             </motion.div>
 
             {/* Tabs */}
-            <div className="flex gap-1 bg-slate-100 p-1 rounded-xl w-fit">
+            <div className="flex gap-1.5">
                 {TABS.map((tab) => (
                     <button
                         key={tab.key}
                         onClick={() => setActiveTab(tab.key)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                            activeTab === tab.key
-                                ? 'bg-white text-slate-800 shadow-sm'
-                                : 'text-slate-500 hover:text-slate-700'
-                        }`}
+                        className={`px-3 py-1.5 rounded text-[13px] font-medium border transition-colors ${activeTab === tab.key
+                                ? 'bg-white border-slate-300 text-slate-800'
+                                : 'bg-transparent border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                            }`}
                     >
                         {tab.label}
                     </button>
@@ -189,18 +187,11 @@ export function AmazonOrdersPage() {
                     </div>
                 </div>
             ) : orders.length === 0 ? (
-                <div className="flex flex-col items-center gap-4 py-16 text-center">
-                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center border bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200">
-                        <ShoppingCart size={24} className="text-orange-300" />
+                <div className="flex flex-col items-center gap-3 py-16 text-center">
+                    <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <ShoppingCart size={18} className="text-slate-400" />
                     </div>
-                    <div>
-                        <p className="font-semibold text-slate-700">No {tabConfig.label.toLowerCase()}</p>
-                        <p className="text-sm text-slate-400 mt-1">
-                            {activeTab === 'active'
-                                ? 'No active orders awaiting fulfillment'
-                                : `No ${tabConfig.label.toLowerCase()} found`}
-                        </p>
-                    </div>
+                    <p className="text-[14px] font-medium text-slate-600">No {tabConfig.label.toLowerCase()}</p>
                 </div>
             ) : (
                 <div className="space-y-4">

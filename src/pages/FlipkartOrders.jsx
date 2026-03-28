@@ -595,16 +595,15 @@ export function FlipkartOrdersPage() {
             >
                 <button
                     onClick={() => navigate(-1)}
-                    className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-white border border-transparent hover:border-slate-200 transition-all"
+                    className="p-1.5 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
                 >
-                    <ArrowLeft size={18} />
+                    <ArrowLeft size={16} />
                 </button>
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center border bg-gradient-to-br from-yellow-50 to-lime-50 border-yellow-200">
-                    <ShoppingBag size={22} className="text-yellow-600" />
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                    <ShoppingBag size={16} className="text-slate-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h1 className="text-xl font-bold text-slate-900">Flipkart Orders</h1>
-                    <p className="text-sm text-slate-400 truncate">Account: {accountId}</p>
+                    <h1 className="text-[20px] font-medium text-slate-900">Flipkart Orders</h1>
                 </div>
                 <div className="flex items-center gap-2">
                     {allReadyIds.length > 0 && selectedIds.size === 0 && (
@@ -621,7 +620,7 @@ export function FlipkartOrdersPage() {
                     <button
                         onClick={handleRefetch}
                         disabled={isFetching}
-                        className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-white border border-transparent hover:border-slate-200 transition-all disabled:opacity-50"
+                        className="p-1.5 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors disabled:opacity-50"
                         title="Refresh"
                     >
                         <RefreshCw size={16} className={isFetching ? 'animate-spin' : ''} />
@@ -630,15 +629,15 @@ export function FlipkartOrdersPage() {
             </motion.div>
 
             {/* Tabs */}
-            <div className="flex gap-1 bg-slate-100 p-1 rounded-xl w-fit">
+            <div className="flex gap-1.5">
                 {TABS.map((tab) => (
                     <button
                         key={tab.key}
                         onClick={() => handleTabChange(tab.key)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        className={`px-3 py-1.5 rounded text-[13px] font-medium border transition-colors ${
                             activeTab === tab.key
-                                ? 'bg-white text-slate-800 shadow-sm'
-                                : 'text-slate-500 hover:text-slate-700'
+                                ? 'bg-white border-slate-300 text-slate-800'
+                                : 'bg-transparent border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300'
                         }`}
                     >
                         {tab.label}
@@ -655,16 +654,11 @@ export function FlipkartOrdersPage() {
                     <span>{extractError(error)}</span>
                 </div>
             ) : orders.length === 0 ? (
-                <div className="flex flex-col items-center gap-4 py-16 text-center">
-                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center border bg-gradient-to-br from-yellow-50 to-lime-50 border-yellow-200">
-                        <ShoppingBag size={24} className="text-yellow-400" />
+                <div className="flex flex-col items-center gap-3 py-16 text-center">
+                    <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <ShoppingBag size={18} className="text-slate-400" />
                     </div>
-                    <div>
-                        <p className="font-semibold text-slate-700">No {tabConfig.label.toLowerCase()}</p>
-                        <p className="text-sm text-slate-400 mt-1">
-                            {activeTab === 'active' ? 'No active orders awaiting processing' : `No ${tabConfig.label.toLowerCase()} found`}
-                        </p>
-                    </div>
+                    <p className="text-[14px] font-medium text-slate-600">No {tabConfig.label.toLowerCase()}</p>
                 </div>
             ) : (
                 <div className="space-y-4">

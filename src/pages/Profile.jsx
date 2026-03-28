@@ -24,7 +24,6 @@ const pwSchema = z.object({
 
 export function ProfilePage() {
   const { user, logout } = useAuth();
-
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
     resolver: zodResolver(pwSchema),
   });
