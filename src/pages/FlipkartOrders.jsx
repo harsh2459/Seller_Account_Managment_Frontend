@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, createContext, useContext, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -7,7 +7,7 @@ import {
     ArrowLeft, ShoppingBag, RefreshCw, Package,
     Truck, XCircle, Download, AlertCircle,
     Loader2, CheckSquare, Square, FileText,
-    CheckCheck,
+    CheckCheck, X,
 } from 'lucide-react';
 import { accountsApi } from '../api/accounts';
 import { Badge } from '../components/ui/Badge';
@@ -40,6 +40,54 @@ const CANCEL_REASONS = [
     { value: 'b2b_order',             label: 'B2B Order' },
 ];
 
+// ── Error Popup Context ───────────────────────────────────────
+
+const ErrorPopupCtx = createContext(null);
+
+function ErrorPopupProvider({ children }) {
+    const [msg, setMsg] = useState(null);
+    const timerRef = useRef(null);
+
+    const showError = useCallback((message) => {
+        setMsg(message);
+        clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => setMsg(null), 4000);
+    }, []);
+
+    const dismiss = useCallback(() => {
+        clearTimeout(timerRef.current);
+        setMsg(null);
+    }, []);
+
+    useEffect(() => () => clearTimeout(timerRef.current), []);
+
+    return (
+        <ErrorPopupCtx.Provider value={showError}>
+            {children}
+            <AnimatePresence>
+                {msg && (
+                    <motion.div
+                        key="error-popup"
+                        initial={{ opacity: 0, y: 12, scale: 0.97 }}
+                        animate={{ opacity: 1, y: 0,  scale: 1    }}
+                        exit={{    opacity: 0, y: 12, scale: 0.97 }}
+                        transition={{ duration: 0.18 }}
+                        className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex items-start gap-3 bg-white border border-red-200 shadow-lg rounded-xl px-4 py-3 max-w-sm w-full"
+                    >
+                        <AlertCircle size={16} className="text-red-500 shrink-0 mt-0.5" />
+                        <p className="text-sm text-red-700 flex-1 leading-snug">{msg}</p>
+                        <button onClick={dismiss} className="text-slate-400 hover:text-slate-600 transition-colors shrink-0">
+                            <X size={14} />
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </ErrorPopupCtx.Provider>
+    );
+}
+
+const useErrorPopup = () => useContext(ErrorPopupCtx);
+
 // ── Helpers ───────────────────────────────────────────────────
 
 const isUrgent = (dispatchBy) => {
@@ -59,6 +107,7 @@ const triggerDownload = (blob, filename) => {
 // ── Pack Form (single, inline) ────────────────────────────────
 
 function PackForm({ shipment, sellerId, accountId, onSuccess, onCancel }) {
+    const showError = useErrorPopup();
     const [dims, setDims] = useState({ length: '', breadth: '', height: '', weight: '' });
 
     const packMutation = useMutation({
@@ -79,7 +128,7 @@ function PackForm({ shipment, sellerId, accountId, onSuccess, onCancel }) {
             })),
         }),
         onSuccess: () => { toast.success('Shipment packed!'); onSuccess(); },
-        onError:   (err) => toast.error(extractError(err)),
+        onError:   (err) => showError(extractError(err)),
     });
 
     const field = (key, label) => (
@@ -125,6 +174,7 @@ function PackForm({ shipment, sellerId, accountId, onSuccess, onCancel }) {
 // ── Cancel Form (inline) ──────────────────────────────────────
 
 function CancelForm({ shipment, sellerId, accountId, onSuccess, onCancel }) {
+    const showError = useErrorPopup();
     const [reason, setReason] = useState('');
 
     const cancelMutation = useMutation({
@@ -134,7 +184,7 @@ function CancelForm({ shipment, sellerId, accountId, onSuccess, onCancel }) {
             reason,
         }),
         onSuccess: () => { toast.success('Shipment cancelled'); onSuccess(); },
-        onError:   (err) => toast.error(extractError(err)),
+        onError:   (err) => showError(extractError(err)),
     });
 
     return (
@@ -170,6 +220,7 @@ function CancelForm({ shipment, sellerId, accountId, onSuccess, onCancel }) {
 // ── Bulk Pack Modal ───────────────────────────────────────────
 
 function BulkPackModal({ orders, sellerId, accountId, onSuccess, onClose }) {
+    const showError = useErrorPopup();
     const [dims, setDims] = useState({ length: '', breadth: '', height: '', weight: '' });
 
     const bulkPackMutation = useMutation({
@@ -195,7 +246,7 @@ function BulkPackModal({ orders, sellerId, accountId, onSuccess, onClose }) {
             toast.success(`${orders.length} shipment${orders.length > 1 ? 's' : ''} packed!`);
             onSuccess();
         },
-        onError: (err) => toast.error(extractError(err)),
+        onError: (err) => showError(extractError(err)),
     });
 
     const valid = dims.length && dims.breadth && dims.height && dims.weight;
@@ -262,6 +313,7 @@ function BulkPackModal({ orders, sellerId, accountId, onSuccess, onClose }) {
 // ── Bulk Action Bar ───────────────────────────────────────────
 
 function BulkActionBar({ selectedOrders, sellerId, accountId, onSuccess, onClearSelection, onBulkPack }) {
+    const showError = useErrorPopup();
     const approvedOrders = selectedOrders.filter((o) => o.status === 'APPROVED');
     const packedOrders   = selectedOrders.filter((o) => o.status === 'PACKED');
     const readyOrders    = selectedOrders.filter((o) => o.status === 'READY_TO_DISPATCH');
@@ -275,7 +327,7 @@ function BulkActionBar({ selectedOrders, sellerId, accountId, onSuccess, onClear
             toast.success(`${packedOrders.length} shipment${packedOrders.length > 1 ? 's' : ''} marked ready to dispatch!`);
             onSuccess();
         },
-        onError: (err) => toast.error(extractError(err)),
+        onError: (err) => showError(extractError(err)),
     });
 
     const bulkLabelsMutation = useMutation({
@@ -284,7 +336,7 @@ function BulkActionBar({ selectedOrders, sellerId, accountId, onSuccess, onClear
             triggerDownload(res.data, `labels-bulk-${Date.now()}.pdf`);
             toast.success(`Labels downloaded for ${readyOrders.length} shipment${readyOrders.length > 1 ? 's' : ''}`);
         },
-        onError: (err) => toast.error(extractError(err)),
+        onError: (err) => showError(extractError(err)),
     });
 
     const manifestMutation = useMutation({
@@ -293,7 +345,7 @@ function BulkActionBar({ selectedOrders, sellerId, accountId, onSuccess, onClear
             triggerDownload(res.data, `manifest-${Date.now()}.pdf`);
             toast.success('Manifest downloaded');
         },
-        onError: (err) => toast.error(extractError(err)),
+        onError: (err) => showError(extractError(err)),
     });
 
     return (
@@ -361,6 +413,7 @@ function BulkActionBar({ selectedOrders, sellerId, accountId, onSuccess, onClear
 // ── Order Card ────────────────────────────────────────────────
 
 function OrderCard({ order, sellerId, accountId, onRefetch, selected, onToggleSelect }) {
+    const showError = useErrorPopup();
     const [showPack,   setShowPack]   = useState(false);
     const [showCancel, setShowCancel] = useState(false);
 
@@ -370,7 +423,7 @@ function OrderCard({ order, sellerId, accountId, onRefetch, selected, onToggleSe
             locationId:  order.locationId || '',
         }),
         onSuccess: () => { toast.success('Marked ready to dispatch!'); onRefetch(); },
-        onError:   (err) => toast.error(extractError(err)),
+        onError:   (err) => showError(extractError(err)),
     });
 
     const labelsMutation = useMutation({
@@ -379,7 +432,7 @@ function OrderCard({ order, sellerId, accountId, onRefetch, selected, onToggleSe
             triggerDownload(res.data, `labels-${order.shipmentId}.pdf`);
             toast.success('Label downloaded');
         },
-        onError: (err) => toast.error(extractError(err)),
+        onError: (err) => showError(extractError(err)),
     });
 
     const manifestMutation = useMutation({
@@ -388,7 +441,7 @@ function OrderCard({ order, sellerId, accountId, onRefetch, selected, onToggleSe
             triggerDownload(res.data, `manifest-${order.shipmentId}.pdf`);
             toast.success('Manifest downloaded');
         },
-        onError: (err) => toast.error(extractError(err)),
+        onError: (err) => showError(extractError(err)),
     });
 
     const urgent = isUrgent(order.dispatchBy);
@@ -538,6 +591,30 @@ export function FlipkartOrdersPage() {
     const [selectedIds, setSelectedIds] = useState(new Set());
     const [bulkPackOrders, setBulkPackOrders] = useState(null);
 
+    return (
+        <ErrorPopupProvider>
+            <FlipkartOrdersContent
+                sellerId={sellerId}
+                accountId={accountId}
+                navigate={navigate}
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                selectedIds={selectedIds}
+                setSelectedIds={setSelectedIds}
+                bulkPackOrders={bulkPackOrders}
+                setBulkPackOrders={setBulkPackOrders}
+            />
+        </ErrorPopupProvider>
+    );
+}
+
+function FlipkartOrdersContent({
+    sellerId, accountId, navigate,
+    activeTab, setActiveTab,
+    selectedIds, setSelectedIds,
+    bulkPackOrders, setBulkPackOrders,
+}) {
+    const showError = useErrorPopup();
     const tabConfig = TABS.find((t) => t.key === activeTab);
 
     const { data, isFetching, error, refetch } = useQuery({
@@ -567,13 +644,11 @@ export function FlipkartOrdersPage() {
         });
     };
 
-    const selectAll    = () => setSelectedIds(new Set(orders.map((o) => o.shipmentId || o.orderId)));
-    const clearSelection = () => setSelectedIds(new Set());
-
+    const selectAll       = () => setSelectedIds(new Set(orders.map((o) => o.shipmentId || o.orderId)));
+    const clearSelection  = () => setSelectedIds(new Set());
     const handleTabChange = (key) => { setActiveTab(key); clearSelection(); };
     const handleRefetch   = () => { clearSelection(); refetch(); };
 
-    // All READY_TO_DISPATCH in current view — for header manifest button
     const allReadyIds = orders.filter((o) => o.status === 'READY_TO_DISPATCH').map((o) => o.shipmentId);
 
     const manifestAllMutation = useMutation({
@@ -582,7 +657,7 @@ export function FlipkartOrdersPage() {
             triggerDownload(res.data, `manifest-all-${Date.now()}.pdf`);
             toast.success('Manifest downloaded');
         },
-        onError: (err) => toast.error(extractError(err)),
+        onError: (err) => showError(extractError(err)),
     });
 
     return (

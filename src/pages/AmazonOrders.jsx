@@ -31,7 +31,7 @@ const STATUS_COLORS = {
 
 const FULFILLMENT_LABELS = {
     MFN: 'Self Ship',
-    AFN: 'Fulfilled by Amazon', D
+    AFN: 'Fulfilled by Amazon',
 };
 
 // ── Helpers ───────────────────────────────────────────────────

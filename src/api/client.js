@@ -21,7 +21,7 @@ let isRefreshing = false;
 let refreshQueue = [];
 
 const processQueue = (error, token = null) => {
-  refreshQueue.forEach((p) => (error ? p.reject(error) : p.resolve(token)));
+  refreshQueue.forEach((p) => (error ? p.reject(error) : p.resolve(token)));  
   refreshQueue = [];
 };
 
